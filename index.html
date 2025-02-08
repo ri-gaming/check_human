@@ -104,7 +104,7 @@
         // Start webcam video stream
         async function startVideo() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1080, height: 1920 } });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
                 document.getElementById('video').srcObject = stream;
             } catch (error) {
                 alert("Please allow camera access!");
