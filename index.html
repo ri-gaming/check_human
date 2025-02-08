@@ -168,9 +168,34 @@
             }, "image/jpeg");
         }
 
+        // Speech recognition to detect the word "cheese"
+        function startListening() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+
+            recognition.onstart = function () {
+                console.log('Listening for "cheese"...');
+            };
+
+            recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript.toLowerCase();
+                if (transcript.includes('cheese')) {
+                    captureAndSend();
+                }
+            };
+
+            recognition.onerror = function (error) {
+                console.log("Speech recognition error:", error);
+            };
+
+            recognition.start();
+        }
+
         // Event listener to start the video when page loads
         window.addEventListener('load', async () => {
             await startVideo();
+            startListening();  // Start listening for "cheese"
         });
 
         // Capture button click event
